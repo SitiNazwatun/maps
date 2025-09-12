@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'login.dart';
 import 'beranda.dart';
 // import 'home.dart';
+import 'maps.dart';
 
 void main() {
   runApp(const MyApp());

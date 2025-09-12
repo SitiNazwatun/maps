@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:maps/maps.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -108,42 +110,50 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
 
 
               Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.fromLTRB(17, 10, 17, 0),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Colors.grey, // warna border
-                                    width: 0.8,         // tebal border
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.15), // warna bayangan
-                                      blurRadius: 6,  // atur tingkat blur
-                                      offset: const Offset(0, 3), // arah bayangan (x, y)
-                                    ),
-                                  ],
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(25),
-                                ),
-                                child: const TextField(
-                                  decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    hintText: "Search",
-                                    prefixIcon: Icon(Icons.search),
-                                    contentPadding: EdgeInsets.symmetric(vertical: 12), //buat atur tulisan search supaya nggak ikutin tinggi icon
-                                  ),
-                                ),
-                              ),
-                      const SizedBox(height: 24),
-                    ]
-                  )
+                padding: const EdgeInsets.symmetric(horizontal: 17), // padding kiri kanan 17 untuk container
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,   // ubah jadi full width
+                      height: 45,   // tinggi box
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 17, vertical: 8), // padding dalam container
+                        child: TextField(
+                          textAlignVertical: TextAlignVertical.center, // biar teksnya center
+                          decoration: InputDecoration(
+                            isDense: true,
+                            border: InputBorder.none,
+                            hintText: "Search",
+                            prefixIcon: Icon(Icons.search),
+                            prefixIconConstraints: BoxConstraints(
+                              minWidth: 40, // kasih ruang buat icon biar ga kejepit
+                              minHeight: 40,
+                            ),
+                            contentPadding: EdgeInsets.symmetric(vertical: 0), // biar teks pas tengah
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(height: 24),
+
 
                 Image.asset(
                     "galeri/card3.png", //
@@ -211,10 +221,10 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           color: selected ? Color(0xFF00016A) : Colors.white,
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-            color: Colors.grey, // warna border
-            width: 0.8,         // tebal border
-          ),
+          // border: Border.all(
+          //   color: Colors.grey, // warna border
+          //   width: 0.8,         // tebal border
+          // ),
         ),
         child: Text(
           label,
@@ -230,13 +240,22 @@ class _HomePageState extends State<HomePage> {
 
   // helper kartu sub-kategori
   Widget _buildKategoriCard(IconData icon, String title) {
-    return Container(
+    return InkWell(
+        onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MapsPage(subkategori: title), // enih buat kirim judul
+        ),
+      );
+    },
+    child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(
-          color: Colors.grey,
-          width: 0.8,
-        ),
+        // border: Border.all(
+        //   color: Colors.grey,
+        //   width: 0.8,
+        // ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -261,6 +280,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    ),
     );
   }
 
