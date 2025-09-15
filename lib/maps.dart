@@ -4,6 +4,10 @@ import 'package:latlong2/latlong.dart'; // package untuk koordinat
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:maps/beranda.dart';
+import 'package:maps/detail.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../model/tempat.dart';
+
 
 class MapsPage extends StatefulWidget {
   final String subkategori; //ini nyambung aman beranda supaya kalo subkategori di klik masup ke maps terus dengan nama title sesuai yg diklik
@@ -16,11 +20,15 @@ class MapsPage extends StatefulWidget {
 class _MapsPageState extends State<MapsPage> {
   final MapController _mapController = MapController();
   LatLng? _userLocation; // posisi user
+  late List<Place> placesToShow;
+
 
   @override
   void initState() {
     super.initState();
     _getUserLocation();
+    //ini ambil data sesuai subkategori
+    placesToShow = placesByCategory[widget.subkategori] ?? [];
   }
 
   Future<void> _getUserLocation() async {
@@ -51,30 +59,40 @@ class _MapsPageState extends State<MapsPage> {
             mapController: _mapController,
             options: MapOptions(
               initialCenter: _userLocation!,
-              initialZoom: 13,
+              initialZoom: 18,
             ),
             children: [
               TileLayer(
                 urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                subdomains:  const ['a', 'b', 'c'],
+                subdomains: const ['a', 'b', 'c'],
               ),
               MarkerLayer(
-                  markers: [
-                    Marker(
-                        point: _userLocation!,
-                        width: 80,
-                        height: 80,
-                        child: const Icon(
-                        Icons.location_on,
-                        color: Colors.red,
-                        size: 40,
-                      ),
+                markers: [
+                  Marker(
+                    point: _userLocation!,
+                    width: 80,
+                    height: 80,
+                    child: const Icon(
+                      Icons.location_history,
+                      color: Color(0xFF00016A),
+                      size: 40,
                     ),
-                  ],
-              ),
+                  ),
+                  ...placesToShow.map((place) => Marker(
+                    point: LatLng(place.lat, place.lng),
+                    width: 60,
+                    height: 60,
+                    child: const Icon(
+                      Icons.location_on,
+                      color: Colors.red,
+                      size: 40,
+                    ),
+                  )),
+                ],
+              ), // <<< PENTING: koma ini
             ],
           ),
-          
+
           //bagian atas
           Positioned(
               top: 50,
@@ -147,7 +165,7 @@ class _MapsPageState extends State<MapsPage> {
                 ],
               ),
           ),
-          
+
           //bagian bawah
           Positioned(
               left:17,
@@ -185,33 +203,62 @@ class _MapsPageState extends State<MapsPage> {
                       ),
                       const SizedBox(height: 8),
 
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF00016A),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const NextPage(),
+                        Row(
+                          children: [
+                            //tombol lihat
+                            Expanded(
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFF00016A),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                );
-                              },
-                              child: const Text(
-                                'Lihat',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const DetailPage(),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  'Lihat',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
-                          ),
-                        ),
+                            ),
+                            const SizedBox(width: 12),
+
+                            // Tombol Rute
+                            Expanded(
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green, // warna beda biar jelas
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                                onPressed: () {
+                                  // contoh buka Google Maps dengan koordinat
+                                  // final lat = _userLocation?.latitude ?? 0.0;
+                                  // final lng = _userLocation?.longitude ?? 0.0;
+                                  // final url = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$lat,$lng");
+                                  // launchUrl(url, mode: LaunchMode.externalApplication);
+                                },
+                                child: const Text(
+                                  'Rute',
+                                  style: TextStyle(fontSize: 16, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
                       ],
                     ),
                 ),
@@ -223,15 +270,15 @@ class _MapsPageState extends State<MapsPage> {
   }
 }
 
-// Halaman selanjutnya
-class NextPage extends StatelessWidget {
-  const NextPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Detail Tempat')),
-      body: const Center(child: Text('Ini halaman detail tempat')),
-    );
-  }
-}
+// // Halaman selanjutnya
+// class NextPage extends StatelessWidget {
+//   const NextPage({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('Detail Tempat')),
+//       body: const Center(child: Text('Ini halaman detail tempat')),
+//     );
+//   }
+// }
