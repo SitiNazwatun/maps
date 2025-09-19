@@ -42,19 +42,17 @@ class _LoginPageState extends State<LoginPage> {
       final email = emailController.text.trim();
       final password = passwordController.text;
 
-      // Statis login
+      // login statis dulu
       const validEmail = 'coba@gmail.com';
       const validPassword = '123456';
 
       if (email == validEmail && password == validPassword) {
-        // Login berhasil → pindah ke HomePage
         debugPrint('Login Berhasil!');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomePage()),
         );
       } else {
-        // Login gagal
         debugPrint('Login Gagal!');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Email atau Password salah')),
@@ -77,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
             fit: BoxFit.cover,
           ),
 
-          // Overlay untuk membuat form lebih terbaca
+          // Overlay biar form lebih kebaca
           Container(
             color: Colors.black.withOpacity(0.2),
           ),

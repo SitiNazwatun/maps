@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-
 import 'package:maps/maps.dart';
+import 'model/kategori.dart';
+import 'login.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,47 +14,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String selectedKategori = "Food & Drink";
-
-  final Map<String, List<Map<String, dynamic>>> menuByKategori = {
-    "Food & Drink": [
-      {"icon": Icons.restaurant, "title": "Restoran"},
-      {"icon": Icons.local_cafe, "title": "Kafe"},
-      {"icon": Icons.cake, "title": "Toko Roti"},
-      {"icon": Icons.fastfood, "title": "Pusat Makanan"},
-    ],
-    "Rekreasi & Hiburan": [
-      {"icon": Icons.tour, "title": "Tempat Wisata"},
-      {"icon": Icons.family_restroom, "title": "Hiburan Keluarga"},
-      {"icon": Icons.shopping_bag, "title": "Pusat Perbelanjaan"},
-      {"icon": Icons.sports_gymnastics, "title": "Tempat Olahraga"},
-    ],
-    "Pendidikan": [
-      {"icon": Icons.school, "title": "Sekolah"},
-        {"icon": Icons.school, "title": "Universitas"},
-      {"icon": Icons.class_rounded, "title": "Kursus dan Pelatihan"},
-      {"icon": Icons.library_books, "title": "Perpustakaan"},
-    ],
-    "Kesehatan": [
-      {"icon": Icons.local_hospital, "title": "Medis"},
-      {"icon":Icons.local_pharmacy, "title": "Apotek"},
-      {"icon":Icons.fitness_center, "title": "Pusat Kebugaran"},
-    ],
-    "Layanan Jasa": [
-      {"icon": Icons.directions_car, "title": "Otomotif"},
-      {"icon":Icons.face, "title": "Kecantikan"},
-      {"icon":Icons.more_horiz, "title": "Layanan Lainnya"},
-    ],
-    "Transportasi & Akomodasi": [
-      {"icon": Icons.emoji_transportation, "title": "Transportasi "},
-      {"icon":Icons.hotel, "title": "Akomodasi"},
-    ],
-    "Pemerintahan & Keagamaan": [
-        {"icon": Icons.business_sharp, "title": "Kantor Publik "},
-      {"icon":Icons.mosque, "title": "Tempat Ibadah"},
-    ],
-
-};
+  String selectedKategori = "Makanan & Gaya Hidup";
 
   @override
   Widget build(BuildContext context) {
@@ -82,14 +42,104 @@ class _HomePageState extends State<HomePage> {
 
 
                     //bagian akun orang
-                    ClipOval(
-                      child: Image.asset(
-                          'galeri/user.png',
-                          width: 54,
-                          height: 54,
-                          fit: BoxFit.cover,
+                    PopupMenuButton <String>(
+                      offset: const Offset(0, 60),
+                      color: const Color(0xFF00016A), // warna background popup
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12), // sudut membulat
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 50,   // lebar minimum popup
+                      ),
+                      onSelected: (value) {
+                        if (value == 'Logout') {
+                          //enih aksinya
+                          showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text(
+                                    "Konfirmasi",
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      color: Color(0xFF00016A),
+                                ),
+                                ),
+                                content: Text(
+                                    "Anda yakin akan logout?",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    color: Color(0xFF00016A),
+                                ),
+                                ),
+                                actions:  [
+                                  TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child:  Text(
+                                          "Batal",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 15,
+                                        color: Color(0xFF00016A),
+                                      ),
+                                  ),
+                                  ),
+                                  TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context); //nutup dialog
+                                        // Navigator.pushReplacementNamed(context, /login), //hapus session, token, lalu redirect ke login
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => const LoginPage()
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                          "Logout",
+                                              style: GoogleFonts.poppins(
+                                              fontSize: 15,
+                                                color: Color(0xFF00016A),
+                                      ),
+                                      ),
+                                  ),
+                                ],
+                              ),
+                          );
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'Logout',
+                          child: Center(
+                          child: Text(
+                              "Logout",
+                              style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white, // atur teks di pop-up enih
+                              ),
+                          ),
+                        ),
+                        ),
+                      ],
+                      child: ClipOval(
+                        child: Image.asset(
+                            'galeri/user.png',
+                            width: 54,
+                            height: 54,
+                            fit: BoxFit.cover,
+                        ),
                       ),
                     ),
+
+                    // ClipOval(
+                    //   child: Image.asset(
+                    //       'galeri/user.png',
+                    //       width: 54,
+                    //       height: 54,
+                    //       fit: BoxFit.cover,
+                    //   ),
+                    // ),
 
                     // kalau diambil dari server
                     // CircleAvatar(
@@ -174,12 +224,12 @@ class _HomePageState extends State<HomePage> {
                             height: 40,
                             child: ListView(
                               scrollDirection: Axis.horizontal,
-                              children: menuByKategori.keys.map((category) {
+                              children: menuByKategori.keys.map((kategori) {
                                 return _buildCategoryChip(
-                                  category,
-                                  selectedKategori == category,
+                                  kategori,
+                                  selectedKategori == kategori,
                                       () {
-                                    setState(() => selectedKategori = category);
+                                    setState(() => selectedKategori = kategori);
                                   },
                                 );
                               }).toList(),
@@ -196,8 +246,8 @@ class _HomePageState extends State<HomePage> {
                             crossAxisSpacing: 17,
                             childAspectRatio: 1.2,
                             children: menuByKategori[selectedKategori]!
-                                .map((menu) =>
-                                _buildKategoriCard(menu["icon"], menu["title"]))
+                                .map((subkategori) =>
+                                _buildKategoriCard(subkategori["icon"], subkategori["title"]))
                                 .toList(),
                           ),
                   ],
