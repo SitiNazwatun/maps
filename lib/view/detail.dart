@@ -1,13 +1,13 @@
   import 'package:flutter/material.dart';
-  // import 'package:maps/model/tempat.dart';
-  import '../model/tempat.dart';
-  import 'package:maps/detail.dart';
+  import 'package:maps/model/map_model.dart';
+  import 'detail.dart';
   import 'package:google_fonts/google_fonts.dart';
   import 'maps.dart';
+  import '../model/map_model.dart';
 
 
   class DetailPage extends StatefulWidget {
-    final Map<String, dynamic> item;
+    final MapModel item;
     //item dari mana? itu parameter dari maps.dart saat marker di klik
 
     const DetailPage({super.key, required this.item});
@@ -19,13 +19,13 @@
   }
 
   class _DetailPageState extends State<DetailPage> {
-    late Map<String, dynamic> SelectDetail;
-
-    @override
-    void initState() {
-      super.initState();
-      SelectDetail = widget.item; //variabel untuk data dari widget item supaya dapat digunakan oleh halaman enih
-    }
+    // late Map<String, dynamic> SelectDetail;
+    //
+    // @override
+    // void initState() {
+    //   super.initState();
+    //   SelectDetail = widget.item; //variabel untuk data dari widget item supaya dapat digunakan oleh halaman enih
+    // }
 
     // Helper  untuk icon
     Widget _buildCustomIcon(IconData iconData) {
@@ -36,8 +36,26 @@
       );
     }
 
+    Widget _buildRatingStars() {
+      return Row(
+        children: List.generate(5, (index) {
+          // Akses properti item melalui widget.item
+          return Icon(
+            Icons.star,
+            color: index < widget.item.rating.round() ? Colors.orange : Colors.grey[300],
+            size: 24,
+          );
+        }),
+      );
+    }
+
     @override
     Widget build(BuildContext context) {
+      final item = widget.item;
+      final List<dynamic>? fotoMenuData = item.fotoMenu;
+      final List<dynamic>? fasilitasData = item.fasilitas;
+      final List<dynamic>? gambarData = item.gambar;
+
       return Scaffold(
           body: SingleChildScrollView(
               child: Column(
@@ -45,8 +63,8 @@
                   Stack(
                     children: [
                       Image.asset(
-                        SelectDetail["fotoTempat"],
-                        // "galeri/ayamgulai.jpeg",
+                        // SelectDetail["fotoTempat"],
+                        "galeri/ayamgulai.jpeg",
                         width: double.infinity,
                         height: 325,
                         fit: BoxFit.cover,
@@ -95,13 +113,38 @@
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      SelectDetail['nama'] ?? "Nama Tidak Ditemukan",
+                                      item.nama,
                                       style: GoogleFonts.poppins(fontSize: 25, fontWeight: FontWeight.bold),
                                     ),
                                     const SizedBox(height: 10),
                                     Text(
-                                      SelectDetail['alamat'] ?? "Alamat Tidak Ditemukan",
+                                      item.alamat,
                                       style: GoogleFonts.poppins(fontSize: 15),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        // Menggunakan List.generate untuk Bintang
+                                        ...List.generate(5, (index) {
+                                          return Icon(
+                                            Icons.star,
+                                            // Menggunakan item.rating
+                                            color: index < item.rating.round()
+                                                ? Colors.orange
+                                                : Colors.grey[300],
+                                            size: 16, // Ukuran lebih kecil agar pas di baris
+                                          );
+                                        }),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          // Menampilkan nilai rating dengan 1 desimal
+                                          item.rating.toStringAsFixed(1),
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 )
@@ -118,9 +161,9 @@
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => MapsPage(
-                                          subkategori: SelectDetail['subkategori'],
-                                          tujuanLat: SelectDetail['lat'], //ambil koordinat titik saat ini yg dipilih, terus nanti konek ama maps dan munculin rute
-                                          tujuanLng: SelectDetail['lng'],
+                                          subkategori: item.subkategori,
+                                          tujuanLat: item.lat, //ambil koordinat titik saat ini yg dipilih, terus nanti konek ama maps dan munculin rute
+                                          tujuanLng: item.lng,
                                         ),
                                       ),
                                     );
@@ -165,7 +208,7 @@
                           children: [
                             _buildCustomIcon(Icons.access_time),                            SizedBox(width: 8),
                             Text(
-                              SelectDetail['jamOperasi'] ?? "Nama Tidak Ditemukan",
+                              widget.item.jamOperasi,
                               style: GoogleFonts.poppins(fontSize: 15),
                             ),
                           ],
@@ -176,7 +219,7 @@
                             _buildCustomIcon(Icons.phone_in_talk_outlined),
                             SizedBox(width: 8),
                             Text(
-                              SelectDetail['kontak'] ?? "Kontak Tidak Ditemukan",
+                              widget.item.kontak,
                               style: GoogleFonts.poppins(fontSize: 15),
                             ),
                           ],
@@ -184,7 +227,7 @@
                         SizedBox(height: 20),
 
                         //MENU
-                      if (SelectDetail['fotoMenu'] != null && (SelectDetail['fotoMenu'] as List).isNotEmpty) ...[
+                      if (fotoMenuData !=null && fotoMenuData.isNotEmpty) ...[
                         Container(
                           width: 120,
                           height: 40,
@@ -213,18 +256,18 @@
                           mainAxisSpacing: 17,
                           crossAxisSpacing: 17,
                           childAspectRatio: 1,
-                          children: (SelectDetail["fotoMenu"] as List)
+                          children: fotoMenuData
                             .map((menu) => _buildMenuCard(
                               menu["gambarMenu"],
                               menu["namaMenu"] ?? "Menu Tidak Tersedia",
                           ))
-                              .toList(),
+                             .toList(),
                         ),
                       ],
                         const SizedBox(height: 20),
 
                         //FASILITAS
-                        if (SelectDetail['fasilitas'] != null && (SelectDetail['fasilitas'] as List).isNotEmpty) ...[
+                        if (fasilitasData != null && fasilitasData.isNotEmpty) ...[
                         Container(
                           width: 120,
                           height: 40,
@@ -248,12 +291,12 @@
 
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 17),
-                          child: _buildFasilitasFromData(),
+                          child: _buildFasilitasFromData(fasilitasData),
                         ),
                         SizedBox(height: 20),
 
                         //GAMBAR
-                        if (SelectDetail['gambar'] != null && (SelectDetail['gambar'] as List).isNotEmpty) ...[
+                        if (gambarData != null && gambarData.isNotEmpty) ...[
                         Container(
                           width: 120,
                           height: 40,
@@ -283,12 +326,12 @@
                           mainAxisSpacing: 17,
                           crossAxisSpacing: 17,
                           childAspectRatio: 1,
-                          children: (SelectDetail["gambar"] as List)
-                              .map((gambar) => _buildGambar(
-                            (gambar as Map<String, dynamic>)["gambar"],
+                          children: gambarData
+                              ?.map((gambar) => _buildGambar(
+                            (gambar as Map<String, dynamic>)["gambar"] ?? 'galeri/ayamgulai.jpeg',
                           ))
-                              .toList(),
-                        ),
+                              .toList()
+                          ??[]),
                         ],
                         const SizedBox(height: 20),
 
@@ -358,8 +401,10 @@
     }
 
     // Widget untuk membangun fasilitas dari data
-    Widget _buildFasilitasFromData() {
-      List<Map<String, dynamic>> fasilitas = List<Map<String, dynamic>>.from(SelectDetail['fasilitas'] ?? []);
+    Widget _buildFasilitasFromData(List<dynamic> fasilitasData) {
+      List<Map<String, dynamic>> fasilitas = List<Map<String, dynamic>>.from(
+        fasilitasData ?? [],
+      );
 
       // Bagi fasilitas menjadi 2 kolom
       List<Widget> leftColumn = [];

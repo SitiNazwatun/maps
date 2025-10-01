@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'dart:convert';
-import 'package:maps/maps.dart';
-import 'model/kategori.dart';
+import 'maps.dart';
 import 'login.dart';
+import '../model/kategori.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/auth/auth_bloc.dart';
+import '../bloc/auth/auth_event.dart';
+import '../bloc/auth/auth_state.dart';
+
+import '../repositorie/map_repo.dart';
+import '../bloc/map/map_state.dart';
+import '../bloc/map/map_event.dart';
+import '../bloc/map/map_bloc.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,11 +24,29 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String selectedKategori = "Makanan & Gaya Hidup";
+  String selectedKategori = menuByKategori.keys.first;
+
+  // Fungsi untuk mendapatkan daftar sub-kategori berdasarkan kategori yang dipilih
+  List<Map<String, dynamic>> _getSubKategori() {
+    return menuByKategori[selectedKategori] ?? [];
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final List<Map<String, dynamic>> subKategoriAktif = _getSubKategori();
+
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        // Hanya akan terjadi setelah AuthBloc memproses LogoutButtonPressed
+        if (state is AuthLoggedOut) {
+          // Navigasi ke LoginPage dan HAPUS SEMUA HISTORY LAMA
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+                (Route<dynamic> route) => false, // Hapus semua route sebelumnya
+          );
+        }
+      },
+      child: Scaffold(
       backgroundColor: Color(0xFFEBEBEB),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -30,14 +58,25 @@ class _HomePageState extends State<HomePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // bagian text Hello-nya
-                    Text(
-                      "Hello!",
-                      style: GoogleFonts.poppins(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF00016A),
-                      ),
+                    Consumer<AuthBloc>(
+                      builder: (context, authBloc, child) {
+                        final state = authBloc.state;
+                        String displayName = "Hello!"; //defaultnya
+
+                        //jika berhasil, ambil username
+                        if (state is AuthSuccess) {
+                          displayName = "Hello, ${state.user.username}!";
+                        }
+
+                        return Text(
+                          displayName,
+                          style: GoogleFonts.poppins(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF00016A),
+                          ),
+                        );
+                      },
                     ),
 
 
@@ -87,12 +126,12 @@ class _HomePageState extends State<HomePage> {
                                   TextButton(
                                       onPressed: () {
                                         Navigator.pop(context); //nutup dialog
-                                        // Navigator.pushReplacementNamed(context, /login), //hapus session, token, lalu redirect ke login
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(builder: (context) => const LoginPage()
-                                          ),
-                                        );
+                                        context.read<AuthBloc>().add(LogoutButtonPressed());
+                                        // Navigator.pushReplacement(
+                                        //   context,
+                                        //   MaterialPageRoute(builder: (context) => const LoginPage()
+                                        //   ),
+                                        // );
                                       },
                                       child: Text(
                                           "Logout",
@@ -131,32 +170,6 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
-
-                    // ClipOval(
-                    //   child: Image.asset(
-                    //       'galeri/user.png',
-                    //       width: 54,
-                    //       height: 54,
-                    //       fit: BoxFit.cover,
-                    //   ),
-                    // ),
-
-                    // kalau diambil dari server
-                    // CircleAvatar(
-                    //   radius: 20,
-                    //   backgroundImage: NetworkImage(user.photoUrl), // ambil dari data user
-                    //   backgroundColor: Colors.grey[200], // fallback kalau kosong
-                    // )
-
-                    //kalau user belum punya foto profil
-                    // CircleAvatar(
-                    //   radius: 20,
-                    //   backgroundColor: Colors.blue,
-                    //   child: Text(
-                    //     user.name[0].toUpperCase(), // ambil huruf pertama
-                    //     style: const TextStyle(color: Colors.white),
-                    //   ),
-                    // )
 
                   ],
                 ),
@@ -245,18 +258,15 @@ class _HomePageState extends State<HomePage> {
                             mainAxisSpacing: 17,
                             crossAxisSpacing: 17,
                             childAspectRatio: 1.2,
-                            children: menuByKategori[selectedKategori]!
-                                .map((subkategori) =>
-                                _buildKategoriCard(subkategori["icon"], subkategori["title"]))
-                                .toList(),
-                          ),
+                            children: subKategoriAktif.map((subkategori) => _buildKategoriCard(subkategori)).toList(),                          ),
                   ],
                 ),
               ),
             ],
           ),
         )
-      ),
+      )
+    ),
     );
   }
 
@@ -272,17 +282,12 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           color: selected ? Color(0xFF00016A) : Colors.white,
           borderRadius: BorderRadius.circular(15),
-          // border: Border.all(
-          //   color: Colors.grey, // warna border
-          //   width: 0.8,         // tebal border
-          // ),
         ),
         child: Text(
           label,
           style: GoogleFonts.poppins(
             color: selected ? Colors.white : Colors.black,
             fontWeight: FontWeight.w500,
-            // fontSize: 11,
           ),
         ),
       ),
@@ -290,23 +295,35 @@ class _HomePageState extends State<HomePage> {
   }
 
   // helper kartu sub-kategori
-  Widget _buildKategoriCard(IconData icon, String title) {
+  Widget _buildKategoriCard(Map<String, dynamic> subkategori) {
+    final IconData icon = subkategori["icon"] as IconData;
+    final String title = subkategori["title"] as String;
     return InkWell(
         onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MapsPage(subkategori: title), // enih buat kirim judul
-        ),
-      );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                return BlocProvider(
+                  // 1. Ambil MapRepo dari MultiRepositoryProvider
+                  // 2. Gunakan Panggilan Positional (tanpa mapRepo:)
+                  create: (context) => MapBloc(
+                    context.read<MapRepo>(), // KOREKSI: Panggilan Positional dan ambil instance yang ada
+                  )..add(
+                      FetchData(subkategori: title), //kirim endpoint disini
+                  ),
+                  child: MapsPage(
+                    subkategori: title,
+                    // ...
+                  ),
+                );
+              },
+            ),
+          );
     },
     child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        // border: Border.all(
-        //   color: Colors.grey,
-        //   width: 0.8,
-        // ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
