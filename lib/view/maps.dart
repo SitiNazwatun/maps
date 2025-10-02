@@ -220,14 +220,13 @@ class _MapsPageState extends State<MapsPage> with TickerProviderStateMixin {
           (item) => _areDoublesClose(item.lat, _initialTujuanLat!) &&
               _areDoublesClose(item.lng, _initialTujuanLng!),
       orElse: () => MapModel(
-        subkategori: '', id: '', nama: '', alamat: '', lat: 0, lng: 0,
-        rating: 0, fotoTempat: '', jamOperasi: '', kontak: '', fotoMenu: null,
-        fasilitas: null, gambar: null,
+        subkategori: '', fotoTempat: '', nama: '', alamat: '', rating: 0, jamOperasi: '',
+        kontak: '', fotoMenu: null, fasilitas: null, gambar: null, lat: 0, lng: 0
       ),
     );
 
     // 2. Jika tempat ditemukan (id tidak kosong) dan lokasi user ada
-    if (targetTempat.id.isNotEmpty && _userLocation != null) {
+    if (targetTempat.subkategori.isNotEmpty && _userLocation != null) {
       setState(() {
         selectedTempat = targetTempat; // Tampilkan detail card
       });

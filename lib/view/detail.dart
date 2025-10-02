@@ -19,13 +19,6 @@
   }
 
   class _DetailPageState extends State<DetailPage> {
-    // late Map<String, dynamic> SelectDetail;
-    //
-    // @override
-    // void initState() {
-    //   super.initState();
-    //   SelectDetail = widget.item; //variabel untuk data dari widget item supaya dapat digunakan oleh halaman enih
-    // }
 
     // Helper  untuk icon
     Widget _buildCustomIcon(IconData iconData) {
@@ -35,6 +28,15 @@
         color: const Color(0xFF00016A),
       );
     }
+
+    //untuk icon dari string ke IconData
+    final Map<String, IconData> iconMapping = {
+      "wifi": Icons.wifi,
+      "local_parking": Icons.local_parking,
+      "ac_unit": Icons.ac_unit,
+      "restaurant_menu": Icons.restaurant_menu,
+      "room_preferences_outlined": Icons.room_preferences_outlined,
+    };
 
     Widget _buildRatingStars() {
       return Row(
@@ -206,7 +208,8 @@
 
                         Row(
                           children: [
-                            _buildCustomIcon(Icons.access_time),                            SizedBox(width: 8),
+                            _buildCustomIcon(Icons.access_time),
+                            SizedBox(width: 8),
                             Text(
                               widget.item.jamOperasi,
                               style: GoogleFonts.poppins(fontSize: 15),
@@ -412,15 +415,27 @@
 
       for (int i = 0; i < fasilitas.length; i++) {
         Widget fasilitasItem = Row(
-          children: [
-            Icon(fasilitas[i]['icon'] ?? Icons.help, size: 18, color: Color(0xFF00016A)),
+          //diubah karena dari API tuh string, butuh di translate ke IconData Flutter
+        children: [
+        Icon(iconMapping[fasilitas[i]['icon']] ?? Icons.help_outline,
+            size: 18,
+            color: Color(0xFF00016A)),
             SizedBox(width: 5),
-            Expanded(child: Text(fasilitas[i]['namafas'] ?? "Fasilitas",
-            style: GoogleFonts.poppins(
-              fontSize: 15
-            ),
+               Expanded(child: Text(fasilitas[i]['namafas'] ?? "Fasilitas",
+                style: GoogleFonts.poppins(
+                fontSize: 15
+                ),
             )),
-          ],
+        ],
+          // children: [
+          //   Icon(fasilitas[i]['icon'] ?? Icons.help, size: 18, color: Color(0xFF00016A)),
+          //   SizedBox(width: 5),
+          //   Expanded(child: Text(fasilitas[i]['namafas'] ?? "Fasilitas",
+          //   style: GoogleFonts.poppins(
+          //     fontSize: 15
+          //   ),
+          //   )),
+          // ],
         );
 
         if (i % 2 == 0) {
@@ -432,7 +447,6 @@
         }
       }
 
-      // PERBAIKAN: Tambahkan return statement
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

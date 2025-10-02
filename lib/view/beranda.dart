@@ -305,10 +305,9 @@ class _HomePageState extends State<HomePage> {
             MaterialPageRoute(
               builder: (context) {
                 return BlocProvider(
-                  // 1. Ambil MapRepo dari MultiRepositoryProvider
-                  // 2. Gunakan Panggilan Positional (tanpa mapRepo:)
+                  // Ambil MapRepo dari MultiRepositoryProvider
                   create: (context) => MapBloc(
-                    context.read<MapRepo>(), // KOREKSI: Panggilan Positional dan ambil instance yang ada
+                    context.read<MapRepo>(),
                   )..add(
                       FetchData(subkategori: title), //kirim endpoint disini
                   ),

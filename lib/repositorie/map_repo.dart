@@ -1,83 +1,54 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:maps/repositorie/auth_repo.dart';
+
 import '../model/map_model.dart';
 import '../model/tempat.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:jwt_decoder/jwt_decoder.dart';
+
 
 
 class MapRepo {
+  final String _baseUrl = 'http://192.168.168.6:8280/destinations/grouped';
+  final AuthRepo _authRepo = AuthRepo(); //supaya bisa ambil token
+
 
   //method fetchMapData
-  Future<List<MapModel>> fetchMapData(String subkategori) async {  //kenapa ada subkategori? ini tuh mksdnya dia ambil subkategori dari TempatByKategori
+  Future<List<MapModel>> fetchMapData(String subkategori) async {
+    //kenapa ada subkategori? ini tuh mksdnya dia ambil subkategori dari TempatByKategori
     await Future.delayed(const Duration(milliseconds: 500));
 
-    final rawDataList = TempatByKategori[subkategori] ?? []; //nah ini kasih subkategori dan TempatByKategori
+    try {
+      //ambil token dari authrepo
+      final token = await _authRepo.readToken();
+      if (token == null || token.isEmpty) {
+        throw Exception("Token tidak ditemukan, silakan login ulang!");
+      }
 
-    if (rawDataList.isEmpty) { //ini kalo datanya kosong langsung return list kosong yeah
-      return [];
+      //panggil API dengan header Authorization
+      final respons = await http.get(
+        Uri.parse(_baseUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      //cek status respon
+      if (respons.statusCode == 200) {
+        final Map<String, dynamic> decoded = jsonDecode(respons.body);
+
+        // ambil sesuai subkategori (contoh: "Kecantikan")
+        final List<dynamic> rawDataList = decoded[subkategori] ?? [];
+
+        return rawDataList.map((json) => MapModel.fromJson(json)).toList();
+      } else {
+        throw Exception("Gagal ambil data: ${respons.statusCode}");
+      }
+    } catch (e) {
+      throw Exception("Error fetchMapData: $e");
     }
-
-    return rawDataList.map((map) {  //ini elemen map diubah jadi mapmodel 
-      return MapModel.fromJson(map);
-    }).toList();
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-// class MapRepo {
-//   // static const String _baseUrl = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime={{eq-starttime}}&endtime={{eq-endtime}}";
-//
-//
-//   Future<List<MapModel>> fetchData() async{
-//     // final url = Uri.parse(_baseUrl);
-//     // final response = await http.get(url);
-//     //
-//     //     if (response.statusCode == 200) {
-//     //       final data = json.decode(response.body) as Map<String,dynamic>;
-//     //       final features = data['features'] as List<dynamic>? ?? [];
-//     //       return features.map((e) => MapModel.fromJson(e)).toList();
-//     //     } else {
-//     //       throw Exception("Gagal memuat data: ${response.statusCode}");
-//     //     }
-//
-//     // --- LOGIKA REPOSITORY TANPA API (MENGEMBALIKAN DATA KOSONG) ---
-//     await Future.delayed(const Duration(milliseconds: 500)); // Simulasi loading
-//     return []; // Mengembalikan list kosong untuk simulasi
-//   }
-//
-//   Future<List<String>> fetchSubCategories() async {
-//     // final url = Uri.parse(_baseUrl);
-//     // final response = await http.get(url);
-//
-//     // if (response.statusCode == 200) {
-//     //   final data = json.decode(response.body) as Map<String,dynamic>;
-//     //   final features = data['features'] as List<dynamic>? ?? [];
-//     //   // ambil semua type dan buang duplikat
-//     //   final types = features.map((e) => e['properties']['type'] as String).toSet().toList();
-//     //   return types;
-//     // } else {
-//     //   throw Exception("Gagal memuat sub-kategori: ${response.statusCode}");
-//     // }
-//
-//     // --- LOGIKA REPOSITORY TANPA API (MENGEMBALIKAN DATA LOKAL) ---
-//     await Future.delayed(const Duration(milliseconds: 500)); // Simulasi loading
-//
-//     // Kembalikan list sub-kategori (value) berdasarkan key kategori
-//     final subKategoriList = menuByKategori[kategoriKey];
-//
-//     if (subKategoriList != null) {
-//       return subKategoriList;
-//     } else {
-//       // Jika kategori tidak ditemukan (seharusnya tidak terjadi)
-//       return [];
-//     }
-//   }
-// }
